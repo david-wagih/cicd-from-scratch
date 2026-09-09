@@ -61,11 +61,12 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       # Build and push the image to Docker Hub
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v7.3.0
-        with:
-          context: .
-          push: true
-          tags: |
-            ${{ secrets.DOCKER_USERNAME }}/express-hello-world:latest
-            ${{ secrets.DOCKER_USERNAME }}/express-hello-world:${{ github.sha }}
+      - name: Tag and Push Docker image
+        run: |
+                # Tag with GitHub SHA
+                docker tag express-hello-world:${{ github.sha }} ${{ secrets.DOCKER_USERNAME }}/express-hello-world:${{ github.sha }}
+                docker push ${{ secrets.DOCKER_USERNAME }}/express-hello-world:${{ github.sha }}
+
+                # Tag with 'latest'
+                docker tag express-hello-world:${{ github.sha }} ${{ secrets.DOCKER_USERNAME }}/express-hello-world:latest
+                docker push ${{ secrets.DOCKER_USERNAME }}/express-hello-world:latest
