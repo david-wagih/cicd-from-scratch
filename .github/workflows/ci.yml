@@ -1,5 +1,5 @@
 on:
-    pull_request:
+  pull_request:
 
 jobs:
   test-and-build:
@@ -39,3 +39,34 @@ jobs:
           name: docker-image
           path: image-artifact/express-hello-world.tar
           retention-days: 1
+
+  push-to-docker-hub:
+    runs-on: ubuntu-latest
+    needs: test-and-build
+    steps:
+      - name: Download Docker image artifact
+        uses: actions/download-artifact@v8.0.1
+        with:
+            name: docker-image
+            path: image-artifact
+
+      - name: Load Docker image
+        run: docker load -i image-artifact/express-hello-world.tar
+
+      # Log in to Docker Hub using secrets
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v4.6.0
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      # Build and push the image to Docker Hub
+      - name: Tag and Push Docker image
+        run: |
+                # Tag with GitHub SHA
+                docker tag express-hello-world:${{ github.sha }} ${{ secrets.DOCKER_USERNAME }}/express-hello-world:${{ github.sha }}
+                docker push ${{ secrets.DOCKER_USERNAME }}/express-hello-world:${{ github.sha }}
+
+                # Tag with 'latest'
+                docker tag express-hello-world:${{ github.sha }} ${{ secrets.DOCKER_USERNAME }}/express-hello-world:latest
+                docker push ${{ secrets.DOCKER_USERNAME }}/express-hello-world:latest
