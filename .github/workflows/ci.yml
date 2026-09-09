@@ -26,4 +26,16 @@ jobs:
 
       # 5. Build Docker image
       - name: Build Docker image
-        run: docker build -t express-hello-world .
+        run: docker build -t express-hello-world:${{ github.sha }} .
+
+      - name: Save Docker image to tar archive
+        run: |
+            mkdir -p image-artifact
+            docker save express-hello-world:${{ github.sha }} -o image-artifact/express-hello-world.tar
+
+      - name: Upload Docker image as artifact
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: docker-image
+          path: image-artifact/express-hello-world.tar
+          retention-days: 1
